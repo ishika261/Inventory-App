@@ -31,7 +31,7 @@ class UserProfileManager(BaseUserManager):
         return user
 
 
-class Userprofile(AbstractBaseUser, PermissionsMixin):
+class UserProfile(AbstractBaseUser, PermissionsMixin):
     """database model for users int he system"""
     email = models.EmailField(max_length=255, unique=True)
     name = models.CharField(max_length=255)
