@@ -19,6 +19,12 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'password': {
                 'write_only': True,
                 'style': {'input_type': 'password'}
+            },
+            'is_superuser': {
+                'read_only': True,
+            },
+            'is_staff': {
+                'read_only': True,
             }
         }
 
