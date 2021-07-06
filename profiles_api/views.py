@@ -131,3 +131,33 @@ class UserLoginApiView(ObtainAuthToken):
 #     def perform_create(self, serializer):
 #         """set the user profile to the logged in user"""
 #         serializer.save(user_profile=self.request.user)
+
+
+class InventoryItemViewSet(viewsets.ModelViewSet):
+    """Handles creating, reading and updating of Inventory Items"""
+    authentication_classes = (TokenAuthentication,)
+    serializer_class = serializers.InventoryItemSerialiser
+    queryset = models.InventoryItem.objects.all()
+    permission_classes = (
+        permissions.UpdateOwnInventoryItem,
+        IsAuthenticated
+    )
+
+    def perform_create(self, serializer):
+        """set the user profile to the logged in user"""
+        serializer.save(owner_club=self.request.user)
+
+
+class EventViewSet(viewsets.ModelViewSet):
+    """Handles creating, reading and updating of Events"""
+    authentication_classes = (TokenAuthentication,)
+    serializer_class = serializers.EventSerialiser
+    queryset = models.Event.objects.all()
+    permission_classes = (
+        permissions.UpdateOwnEvent,
+        IsAuthenticated
+    )
+
+    def perform_create(self, serializer):
+        """set the user profile to the logged in user"""
+        serializer.save(owner_club=self.request.user)

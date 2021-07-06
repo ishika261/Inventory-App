@@ -51,3 +51,40 @@ class UserProfileSerializer(serializers.ModelSerializer):
 #                 'read_only': True
 #             }
 #         }
+
+
+class InventoryItemSerialiser(serializers.ModelSerializer):
+    """Create Inventory item serializer"""
+
+    class Meta:
+        model = models.InventoryItem
+        fields = ('id', 'owner_club', 'item_name', 'item_description',
+                  'item_img', 'total_quantity', 'avl_quantity')
+        extra_kwargs = {
+            'owner_club': {
+                'read_only': True
+            }
+        }
+
+
+class EventSerialiser(serializers.ModelSerializer):
+    """Create Event serializer"""
+
+    class Meta:
+        model = models.Event
+        fields = ('id', 'owner_club', 'event_name', 'event_description',
+                  'status', 'created_on', 'start_date', 'end_date')
+        extra_kwargs = {
+            'owner_club': {
+                'read_only': True
+            }
+        }
+
+
+class EventInventorySerialiser(serializers.ModelSerializer):
+    """Create Event-Inventory serializer"""
+
+    class Meta:
+        model = models.Event
+        fields = ('id', 'event_id', 'inventory_id',
+                  'req_quantity', 'approval_status')

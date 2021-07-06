@@ -5,6 +5,7 @@ from django.contrib.auth.models import BaseUserManager
 from django.conf import settings
 
 from django.core.validators import EmailValidator
+from django.db.models.fields import NullBooleanField
 from django.utils.deconstruct import deconstructible
 
 
@@ -20,6 +21,10 @@ class WhitelistEmailValidator(EmailValidator):
 
 def nameFile(instance, filename):
     return '/'.join(['images', str(instance.name), filename])
+
+
+def itemNameFile(instance, filename):
+    return '/'.join(['images', str(instance.item_name), filename])
 
 
 class UserProfileManager(BaseUserManager):
@@ -38,9 +43,17 @@ class UserProfileManager(BaseUserManager):
 
         return user
 
-    def create_superuser(self, email, name, password):
+    def create_superuser(self, email, name, profile_img=None, password=None):
         """Create and save a new superuser with given details"""
-        user = self.create_user(email, name, password)
+        #user = self.create_user(email, name, profile_img, password)
+
+        if not email:
+            raise ValueError("User must have email address")
+
+        email = self.normalize_email(email)
+        user = self.model(email=email, name=name, profile_img=profile_img)
+
+        user.set_password(password)
 
         user.is_superuser = True
         user.is_staff = True
@@ -84,7 +97,7 @@ class InventoryItem(models.Model):
     item_name = models.CharField(max_length=100)
     item_description = models.CharField(max_length=255)
     created_on = models.DateTimeField(auto_now_add=True)
-    item_img = models.ImageField(upload_to=nameFile, blank=True, null=True)
+    item_img = models.ImageField(upload_to=itemNameFile, blank=True, null=True)
     total_quantity = models.PositiveIntegerField()
     avl_quantity = models.PositiveIntegerField()
 
@@ -105,6 +118,10 @@ class Event(models.Model):
     created_on = models.DateTimeField(auto_now_add=True)
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
+
+    def __str__(self):
+        """Return the model as string"""
+        return self.event_name
 
 
 class EventInventoryRelationship(models.Model):
