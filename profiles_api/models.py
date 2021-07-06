@@ -4,17 +4,34 @@ from django.contrib.auth.models import PermissionsMixin
 from django.contrib.auth.models import BaseUserManager
 from django.conf import settings
 
+from django.core.validators import EmailValidator
+from django.utils.deconstruct import deconstructible
+
+
+@deconstructible
+class WhitelistEmailValidator(EmailValidator):
+
+    def validate_domain_part(self, domain_part):
+        return False
+
+    def __eq__(self, other):
+        return isinstance(other, WhitelistEmailValidator) and super().__eq__(other)
+
+
+def nameFile(instance, filename):
+    return '/'.join(['images', str(instance.name), filename])
+
 
 class UserProfileManager(BaseUserManager):
     """Manager for user-profile"""
 
-    def create_user(self, email, name, password=None):
+    def create_user(self, email, name, profile_img, password=None):
         """Create a new user-profile"""
         if not email:
             raise ValueError("User must have email address")
 
         email = self.normalize_email(email)
-        user = self.model(email=email, name=name)
+        user = self.model(email=email, name=name, profile_img=profile_img)
 
         user.set_password(password)
         user.save(using=self._db)
@@ -34,9 +51,12 @@ class UserProfileManager(BaseUserManager):
 
 class UserProfile(AbstractBaseUser, PermissionsMixin):
 
-    """database model for users int he system"""
-    email = models.EmailField(max_length=255, unique=True)
+    """database model for users in the system"""
+    email = models.EmailField(max_length=255,
+                              unique=True,
+                              validators=[WhitelistEmailValidator(whitelist=['iiti.ac.in'])])
     name = models.CharField(max_length=255)
+    profile_img = models.ImageField(upload_to=nameFile, blank=True, null=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
@@ -45,12 +65,8 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['name']
 
-    def get_full_name(self):
+    def get_name(self):
         """Retrieve full_name of user"""
-        return self.name
-
-    def get_short_name(self):
-        """Retrieve short name"""
         return self.name
 
     def __str__(self):
@@ -58,15 +74,47 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
         return self.email
 
 
-class ProfileFeedItem(models.Model):
-    """Profile Status update"""
-    user_profile = models.ForeignKey(
+class InventoryItem(models.Model):
+    """Model for Inventory-item"""
+    owner_club = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE
     )
-    status_text = models.CharField(max_length=255)
+
+    item_name = models.CharField(max_length=100)
+    item_description = models.CharField(max_length=255)
     created_on = models.DateTimeField(auto_now_add=True)
+    item_img = models.ImageField(upload_to=nameFile, blank=True, null=True)
+    total_quantity = models.PositiveIntegerField()
+    avl_quantity = models.PositiveIntegerField()
 
     def __str__(self):
-        """REturn the model as string"""
-        return self.status_text
+        """Return the model as string"""
+        return self.item_name
+
+
+class Event(models.Model):
+    owner_club = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
+
+    event_name = models.CharField(max_length=100)
+    event_description = models.CharField(max_length=255)
+    status = models.CharField(max_length=100)
+    created_on = models.DateTimeField(auto_now_add=True)
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+
+
+class EventInventoryRelationship(models.Model):
+    event_id = models.ForeignKey(
+        to='Event',
+        on_delete=models.CASCADE
+    )
+    inventory_id = models.ForeignKey(
+        to='InventoryItem',
+        on_delete=models.CASCADE
+    )
+    req_quantity = models.PositiveIntegerField()
+    approval_status = models.BooleanField()
