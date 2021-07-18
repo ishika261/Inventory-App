@@ -161,3 +161,19 @@ class EventViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """set the user profile to the logged in user"""
         serializer.save(owner_club=self.request.user)
+
+
+class EventInventoryViewSet(viewsets.ModelViewSet):
+    """Handles creating, reading and updating of EventInventory"""
+    authentication_classes = (TokenAuthentication,)
+    serializer_class = serializers.EventInventorySerialiser
+    queryset = models.EventInventoryRelationship.objects.all()
+    permission_classes = (
+        permissions.UpdateOwnEventInventory,
+        IsAuthenticated
+    )
+
+    def get_serializer_context(self):
+        context = super(EventInventoryViewSet, self).get_serializer_context()
+        context.update({'request': self.request})
+        return context

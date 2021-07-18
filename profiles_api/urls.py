@@ -9,6 +9,7 @@ router = DefaultRouter()
 router.register('profile', views.UserProfileViewset)
 router.register('inventory', views.InventoryItemViewSet)
 router.register('event', views.EventViewSet)
+router.register('eventInventory', views.EventInventoryViewSet)
 # router.register('feed', views.UserProfileFeedViewsSet)
 
 urlpatterns = [

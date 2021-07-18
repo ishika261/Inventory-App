@@ -134,4 +134,4 @@ class EventInventoryRelationship(models.Model):
         on_delete=models.CASCADE
     )
     req_quantity = models.PositiveIntegerField()
-    approval_status = models.BooleanField()
+    approval_status = models.CharField(max_length=100, default='Pending')

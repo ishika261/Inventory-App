@@ -1,6 +1,9 @@
-from rest_framework import fields, serializers
+import contextlib
+from rest_framework import fields, serializers, status
+from rest_framework.response import Response
 from profiles_api import models
 import profiles_api
+from .models import Event
 
 
 class HelloSerializer(serializers.Serializer):
@@ -85,6 +88,25 @@ class EventInventorySerialiser(serializers.ModelSerializer):
     """Create Event-Inventory serializer"""
 
     class Meta:
-        model = models.Event
+        model = models.EventInventoryRelationship
         fields = ('id', 'event_id', 'inventory_id',
                   'req_quantity', 'approval_status')
+        extra_kwargs = {
+            'owner_club': {
+                'read_only': True
+            },
+            'approval_status': {
+                'read_only': True
+            }
+        }
+
+    def create(self, validated_data):
+
+        event_name = validated_data['event_id']
+        event = Event.objects.get(event_name=event_name)
+        curr_user = self.context['request'].user
+        if event.owner_club.id == curr_user.id:
+            return super().create(validated_data)
+        else:
+            error = {'message': 'You are not the creator of this event'}
+            raise serializers.ValidationError(error)
